@@ -1,0 +1,23 @@
+[package]
+name = "professional-shogi-server"
+version = "0.1.0"
+authors = ["Isamu Mogi <isamu@leafytree.jp>"]
+edition = "2018"
+
+[dependencies]
+async-stream = "*"
+bytes = "*"
+futures = "*"
+http = "*"
+hyper = "*"
+num_cpus = "*"
+tokio = { version = "*", features = ["full"] }
+structopt = "*"
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+jemallocator = "*"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+debug = true

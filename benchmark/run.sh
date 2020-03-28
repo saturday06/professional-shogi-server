@@ -24,17 +24,22 @@ run() (
   sleep 10
 )
 
-cd $(dirname "$0")/..
+if [ uname -s = "Darwin" ]; then
+  nproc() (
+    sysctl -n hw.logicalcpu
+  )
+fi
+
+cd "$(dirname "$0")/.."
 
 cargo build --release
 (cd benchmark/go && go build)
 
-for path in 8k 16k 32k 64k 128k 256k 512k 768k 1m 2m 3m 4m 6m 8m 16m 32m 64m; do
-  for thread in 8; do
+for thread in $(expr $(nproc) / 2) $(nproc); do
+  for path in 8k 16k 32k 64k 128k 256k 512k 768k 1m 2m 3m 4m 6m 8m 16m 32m 64m; do
     for connection in 100; do
       for executable in \
         ./benchmark/rust/default.sh \
-        ./benchmark/rust/no-macro.sh \
         ./benchmark/go/default.sh \
         ./benchmark/go/httputil.sh \
       ; do

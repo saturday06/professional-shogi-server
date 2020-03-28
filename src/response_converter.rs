@@ -11,7 +11,7 @@ impl ResponseConverter {
         Ok(bytes)
     }
 
-    pub fn flush(&mut self) -> Result<Bytes, hyper::Error> {
+    pub fn finish(self) -> Result<Bytes, hyper::Error> {
         Ok(Bytes::new())
     }
 }

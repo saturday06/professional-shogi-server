@@ -16,17 +16,11 @@ struct Opt {
 
     #[structopt(long, default_value = "127.0.0.1:1888")]
     upstream_addr: String,
-
-    #[structopt(long)]
-    no_macro: bool,
 }
-
-#[cfg(not(target_env = "msvc"))]
-use jemallocator::Jemalloc;
 
 //#[cfg(not(target_env = "msvc"))]
 //#[global_allocator]
-//static GLOBAL: Jemalloc = Jemalloc;
+//static GLOBAL: Jemalloc = jemallocator::Jemalloc;
 
 async fn shutdown_signal() {
     tokio::signal::ctrl_c()
@@ -34,16 +28,15 @@ async fn shutdown_signal() {
         .expect("failed to install CTRL+C signal handler");
 }
 
-async fn async_main() {
+async fn async_main() -> Result<(), Box<dyn std::error::Error>> {
     let opt = Opt::from_args();
     println!("{:?}", opt);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], opt.port));
-    // let upstream_base_uri_str = "http://httpbin.org";
     let upstream_base_uri_str = format!("http://{}", opt.upstream_addr);
     let upstream_base_uri = upstream_base_uri_str.parse().expect("failed to parse uri");
 
-    let proxy_service = Arc::new(ProxyService::new(upstream_base_uri, opt.no_macro));
+    let proxy_service = Arc::new(ProxyService::new(upstream_base_uri));
     let inner_proxy_service = proxy_service.clone();
     let make_proxy_service = make_service_fn(move |_addr_stream| {
         let inner_inner_proxy_service = inner_proxy_service.clone();
@@ -65,6 +58,7 @@ async fn async_main() {
     }
 
     proxy_service.print_stat();
+    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -72,9 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .threaded_scheduler()
         .enable_all()
         //.core_threads(16)
+        //.max_threads(10000)
         .build()?;
-    rt.block_on(async {
-        async_main().await;
-        Ok(())
-    })
+    rt.block_on(async_main())
 }

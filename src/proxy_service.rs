@@ -15,11 +15,10 @@ pub struct ProxyService {
     upstream_http_client: Client<HttpConnector>,
     total_request_count: AtomicU64,
     total_successful_request_count: AtomicU64,
-    no_macro: bool,
 }
 
 impl ProxyService {
-    pub fn new(upstream_base_uri: Uri, no_macro: bool) -> ProxyService {
+    pub fn new(upstream_base_uri: Uri) -> ProxyService {
         let mut http_connector = HttpConnector::new();
         // https://github.com/golang/go/blob/go1.14.1/src/net/tcpsock.go#L195
         http_connector.set_nodelay(true);
@@ -37,7 +36,6 @@ impl ProxyService {
             upstream_http_client: http_client,
             total_request_count: AtomicU64::new(0),
             total_successful_request_count: AtomicU64::new(0),
-            no_macro,
         }
     }
 
@@ -59,7 +57,7 @@ impl ProxyService {
         }
         let mut upstream_response = self
             .upstream_http_client
-            .request(upstream_request_builder.body("".into())?)
+            .request(upstream_request_builder.body(Body::empty())?)
             .await?;
 
         let mut response_builder = Response::builder().status(upstream_response.status());
@@ -70,49 +68,17 @@ impl ProxyService {
             }
         }
 
-        if self.no_macro {
-            let response_body_stream = futures::stream::unfold(
-                (
-                    upstream_response,
-                    ResponseConverter::new(),
-                    self.clone(),
-                    false,
-                ),
-                |(mut response, mut response_converter, proxy_service, done)| {
-                    async move {
-                        if done {
-                            proxy_service
-                                .total_successful_request_count
-                                .fetch_add(1, Ordering::SeqCst);
-                            None
-                        } else if let Some(chunk) = response.body_mut().data().await {
-                            Some((
-                                chunk.and_then(|bytes| response_converter.convert(bytes)),
-                                (response, response_converter, proxy_service, false),
-                            ))
-                        } else {
-                            Some((
-                                response_converter.flush(),
-                                (response, response_converter, proxy_service, true),
-                            ))
-                        }
-                    }
-                },
-            );
-            Ok(response_builder.body(Body::wrap_stream(response_body_stream))?)
-        } else {
-            let response_body_stream: async_stream::AsyncStream<Result<_, hyper::Error>, _> = try_stream! {
-                let mut response_converter = ResponseConverter::new();
-                while let Some(chunk) = upstream_response.body_mut().data().await {
-                    let output = response_converter.convert(chunk?)?;
-                    yield output;
-                }
-                let output = response_converter.flush()?;
+        let response_body_stream: async_stream::AsyncStream<Result<_, hyper::Error>, _> = try_stream! {
+            let mut response_converter = ResponseConverter::new();
+            while let Some(chunk) = upstream_response.body_mut().data().await {
+                let output = response_converter.convert(chunk?)?;
                 yield output;
-                self.total_successful_request_count.fetch_add(1, Ordering::SeqCst);
-            };
-            Ok(response_builder.body(Body::wrap_stream(response_body_stream))?)
-        }
+            }
+            let output = response_converter.finish()?;
+            yield output;
+            self.total_successful_request_count.fetch_add(1, Ordering::SeqCst);
+        };
+        Ok(response_builder.body(Body::wrap_stream(response_body_stream))?)
     }
 
     pub fn print_stat(&self) {

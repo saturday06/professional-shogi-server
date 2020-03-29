@@ -24,7 +24,7 @@ run() (
   sleep 10
 )
 
-if [ uname -s = "Darwin" ]; then
+if [ $(uname -s) = "Darwin" ]; then
   nproc() (
     sysctl -n hw.logicalcpu
   )

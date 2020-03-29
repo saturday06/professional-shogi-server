@@ -32,7 +32,16 @@ fi
 
 cd "$(dirname "$0")"
 
-ulimit -n 32768
+ulimit_n=$(ulimit -n)
+if [ $ulimit_n -lt 32768 ]; then
+  cat <<WARNING >&2
+##############################################
+   ulimit -n is less than 32768 but $ulimit_n
+##############################################
+WARNING
+  # exit 1
+fi
+
 cargo build --release
 (cd go && go build)
 

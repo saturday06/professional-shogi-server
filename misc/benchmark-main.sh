@@ -30,7 +30,7 @@ run() (
   sleep 1
   run_task 1 wrk -d 120 -t $thread -c $connection -H 'Host: example' http://127.0.0.1:$port/$path
 
-  kill $executable_pid
+  pkill -TERM -P $executable_pid
   wait $executable_pid || true
 
   sleep 20

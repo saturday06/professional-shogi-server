@@ -58,7 +58,7 @@ fi
 cargo build --release
 (cd driver/go && go build)
 
-mkdir "$PWD/upstream/www/html"
+mkdir -p "$PWD/upstream/www/html"
 nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -s quit || true
 sleep 3
 nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -t

@@ -67,7 +67,7 @@ sleep 3
 
 for thread in $(expr $(nproc) / 2); do
   for path in 8k 16k 32k 64k 128k 256k 512k 768k 1m 2m 3m 4m 6m 8m 16m 32m 64m; do
-    for connection in 100; do
+    for connection in $(expr $(nproc) \* 10); do
       for executable in $(find ./driver -name "*.sh" | sort); do
         run $executable $path $connection $thread
       done

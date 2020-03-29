@@ -26,7 +26,7 @@ run() (
   executable_pid=$!
   sleep 1
 
-  run_task 2 nginx -c "$PWD/misc/nginx.conf" &
+  run_task 2 nginx -p "$PWD" -c "$PWD/nginx.conf" &
   nginx_pid=$!
   sleep 3
 

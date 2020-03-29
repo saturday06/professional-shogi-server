@@ -3,8 +3,8 @@
 set -eux
 
 cd "$(dirname "$0")"
-mkdir -p upstream
-cd upstream
+mkdir -p upstream/www/html
+cd upstream/www/html
 
 if [ $(uname -s) = "Linux" ]; then
   iflag='iflag=fullblock'

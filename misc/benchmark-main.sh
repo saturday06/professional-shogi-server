@@ -2,6 +2,18 @@
 
 set -eux
 
+run_task() (
+  group=$1
+  shift
+
+  if [ $(uname -s) = "Linux" ]; then
+    cpu_list=$(awk 'BEGIN{for (i = 0; i < ARGV[1] / 4; i++) { if (i > 0) printf(","); printf("%d", i + ARGV[1] * ARGV[2] / 4);}}' $(nproc) $group)
+    exec taskset --cpu-list $cpu_list $@
+  else
+    exec $@
+  fi
+)
+
 run() (
   executable=$1
   path=$2
@@ -10,16 +22,22 @@ run() (
   port=13001
   upstream_addr=127.0.0.1:18888
 
-  $executable $port $upstream_addr &
+  run_task 1 $executable $port $upstream_addr &
   executable_pid=$!
+  sleep 1
+
+  run_task 2 nginx -c "$PWD/misc/nginx.conf" &
+  nginx_pid=$!
   sleep 3
 
-  wrk -d 60 -t $thread -c $connection -H 'Host: example' http://127.0.0.1:$port/$path > /dev/null
+  run_task 2 wrk -d 60 -t $thread -c $connection -H 'Host: example' http://127.0.0.1:$port/$path > /dev/null
   sleep 1
-  wrk -d 120 -t $thread -c $connection -H 'Host: example' http://127.0.0.1:$port/$path
+  run_task 2 wrk -d 120 -t $thread -c $connection -H 'Host: example' http://127.0.0.1:$port/$path
 
   kill $executable_pid
   wait $executable_pid || true
+  kill $nginx_pid
+  wait $nginx_pid || true
 
   sleep 10
 )
@@ -42,6 +60,7 @@ WARNING
   # exit 1
 fi
 
+./generate-data.sh
 cargo build --release
 (cd driver/go && go build)
 

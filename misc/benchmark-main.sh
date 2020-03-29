@@ -58,6 +58,7 @@ fi
 cargo build --release
 (cd driver/go && go build)
 run_task 1 nginx -p "$PWD" -c "$PWD/nginx.conf" &
+sleep 1
 
 for thread in $(expr $(nproc) / 2); do
   for path in 8k 16k 32k 64k 128k 256k 512k 768k 1m 2m 3m 4m 6m 8m 16m 32m 64m; do

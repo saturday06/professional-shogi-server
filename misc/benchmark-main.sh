@@ -57,6 +57,7 @@ fi
 ./generate-data.sh
 cargo build --release
 (cd driver/go && go build)
+nginx -p "$PWD" -c "$PWD/nginx.conf" -t
 run_task 1 nginx -p "$PWD" -c "$PWD/nginx.conf" &
 sleep 1
 

@@ -16,6 +16,9 @@ struct Opt {
 
     #[structopt(long, default_value = "127.0.0.1:1888")]
     upstream_addr: String,
+
+    #[structopt(long)]
+    no_chunked: bool,
 }
 
 //#[cfg(not(target_env = "msvc"))]
@@ -36,7 +39,7 @@ async fn async_main() -> Result<(), Box<dyn std::error::Error>> {
     let upstream_base_uri_str = format!("http://{}", opt.upstream_addr);
     let upstream_base_uri = upstream_base_uri_str.parse().expect("failed to parse uri");
 
-    let proxy_service = Arc::new(ProxyService::new(upstream_base_uri));
+    let proxy_service = Arc::new(ProxyService::new(upstream_base_uri, opt.no_chunked));
     let inner_proxy_service = proxy_service.clone();
     let make_proxy_service = make_service_fn(move |_addr_stream| {
         let inner_inner_proxy_service = inner_proxy_service.clone();

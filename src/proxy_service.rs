@@ -15,10 +15,11 @@ pub struct ProxyService {
     upstream_http_client: Client<HttpConnector>,
     total_request_count: AtomicU64,
     total_successful_request_count: AtomicU64,
+    no_chunked: bool,
 }
 
 impl ProxyService {
-    pub fn new(upstream_base_uri: Uri) -> ProxyService {
+    pub fn new(upstream_base_uri: Uri, no_chunked: bool) -> ProxyService {
         let mut http_connector = HttpConnector::new();
         // https://github.com/golang/go/blob/go1.14.1/src/net/tcpsock.go#L195
         http_connector.set_nodelay(true);
@@ -36,6 +37,7 @@ impl ProxyService {
             upstream_http_client: http_client,
             total_request_count: AtomicU64::new(0),
             total_successful_request_count: AtomicU64::new(0),
+            no_chunked,
         }
     }
 
@@ -63,7 +65,7 @@ impl ProxyService {
         let mut response_builder = Response::builder().status(upstream_response.status());
 
         for (key, value) in upstream_response.headers() {
-            if !is_hop_by_hop_header(key) && key != "content-length" {
+            if !is_hop_by_hop_header(key) && (self.no_chunked || key != "content-length") {
                 response_builder = response_builder.header(key, value);
             }
         }

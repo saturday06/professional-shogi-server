@@ -33,7 +33,7 @@ run() (
   kill $executable_pid
   wait $executable_pid || true
 
-  sleep 10
+  sleep 20
 )
 
 if [ $(uname -s) = "Darwin" ]; then

@@ -23,7 +23,7 @@ struct Opt {
 
 //#[cfg(not(target_env = "msvc"))]
 //#[global_allocator]
-//static GLOBAL: Jemalloc = jemallocator::Jemalloc;
+//static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 async fn shutdown_signal() {
     tokio::signal::ctrl_c()

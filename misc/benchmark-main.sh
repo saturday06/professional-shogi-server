@@ -45,14 +45,13 @@ fi
 cd "$(dirname "$0")"
 
 recommended_ulimit_n=32768
-ulimit_n=$(ulimit -n)
-if [ $ulimit_n -lt $recommended_ulimit_n ]; then
+if [ $(ulimit -n) -lt $recommended_ulimit_n ]; then
   ulimit -n $recommended_ulimit_n
 fi
-if [ $ulimit_n -lt $recommended_ulimit_n ]; then
+if [ $(ulimit -n) -lt $recommended_ulimit_n ]; then
   cat <<WARNING >&2
 ##############################################
-   ulimit -n is less than 32768 but $ulimit_n
+   ulimit -n is less than 32768 but $(ulimit -n)
 ##############################################
 WARNING
   # exit 1

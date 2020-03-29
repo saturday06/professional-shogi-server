@@ -30,18 +30,19 @@ if [ uname -s = "Darwin" ]; then
   )
 fi
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")"
 
+ulimit -n 32768
 cargo build --release
-(cd benchmark/go && go build)
+(cd go && go build)
 
 for thread in $(expr $(nproc) / 2) $(nproc); do
   for path in 8k 16k 32k 64k 128k 256k 512k 768k 1m 2m 3m 4m 6m 8m 16m 32m 64m; do
     for connection in 100; do
       for executable in \
-        ./benchmark/rust/default.sh \
-        ./benchmark/go/default.sh \
-        ./benchmark/go/httputil.sh \
+        ./rust/default.sh \
+        ./go/default.sh \
+        ./go/httputil.sh \
       ; do
         run $executable $path $connection $thread
       done

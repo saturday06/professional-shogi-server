@@ -43,16 +43,12 @@ WARNING
 fi
 
 cargo build --release
-(cd go && go build)
+(cd driver/go && go build)
 
 for thread in $(expr $(nproc) / 2) $(nproc); do
   for path in 8k 16k 32k 64k 128k 256k 512k 768k 1m 2m 3m 4m 6m 8m 16m 32m 64m; do
     for connection in 100; do
-      for executable in \
-        ./rust/default.sh \
-        ./go/default.sh \
-        ./go/httputil.sh \
-      ; do
+      for executable in $(find ./driver -name "*.sh" | sort); do
         run $executable $path $connection $thread
       done
     done

@@ -59,13 +59,11 @@ cargo build --release
 (cd driver/go && go build)
 
 mkdir "$PWD/upstream/www/html"
-nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -t
 nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -s quit || true
 sleep 3
+nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -t
 run_task 1 nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -g 'daemon off;' &
 sleep 3
-
-sleep 10000
 
 for thread in $(expr $(nproc) / 2); do
   for path in 8k 16k 32k 64k 128k 256k 512k 768k 1m 2m 3m 4m 6m 8m 16m 32m 64m; do

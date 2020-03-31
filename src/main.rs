@@ -21,9 +21,9 @@ struct Opt {
     no_chunked: bool,
 }
 
-//#[cfg(not(target_env = "msvc"))]
-//#[global_allocator]
-//static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
+#[cfg(feature = "global-allocator-jemalloc")]
+#[global_allocator]
+static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 async fn shutdown_signal() {
     tokio::signal::ctrl_c()

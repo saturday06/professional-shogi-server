@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Isamu Mogi <isamu@leafytree.jp>"]
 edition = "2018"
 
+[features]
+global-allocator-jemalloc = ["jemallocator"]
+
 [dependencies]
 async-stream = "*"
 bytes = "*"
@@ -15,7 +18,7 @@ tokio = { version = "*", features = ["full"] }
 structopt = "*"
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
-jemallocator = "*"
+jemallocator = { version = "*", optional = true }
 
 [profile.release]
 lto = "fat"

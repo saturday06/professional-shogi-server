@@ -19,6 +19,9 @@ struct Opt {
 
     #[structopt(long)]
     no_chunked: bool,
+
+    #[structopt(long)]
+    buffer_size: Option<usize>,
 }
 
 #[cfg(feature = "global-allocator-jemalloc")]
@@ -39,7 +42,11 @@ async fn async_main() -> Result<(), Box<dyn std::error::Error>> {
     let upstream_base_uri_str = format!("http://{}", opt.upstream_addr);
     let upstream_base_uri = upstream_base_uri_str.parse().expect("failed to parse uri");
 
-    let proxy_service = Arc::new(ProxyService::new(upstream_base_uri, opt.no_chunked));
+    let proxy_service = Arc::new(ProxyService::new(
+        upstream_base_uri,
+        opt.no_chunked,
+        opt.buffer_size.clone(),
+    ));
     let inner_proxy_service = proxy_service.clone();
     let make_proxy_service = make_service_fn(move |_addr_stream| {
         let inner_inner_proxy_service = inner_proxy_service.clone();
@@ -50,8 +57,11 @@ async fn async_main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let server = Server::bind(&addr)
-        //.http1_max_buf_size(1024 * 1024)
+    let mut server_builder = Server::bind(&addr);
+    if let Some(buffer_size) = opt.buffer_size {
+        server_builder = server_builder.http1_max_buf_size(buffer_size);
+    }
+    let server = server_builder
         .tcp_nodelay(true)
         .tcp_keepalive(Some(std::time::Duration::from_secs(15)))
         .serve(make_proxy_service)

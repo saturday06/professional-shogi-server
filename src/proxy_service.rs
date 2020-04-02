@@ -19,19 +19,21 @@ pub struct ProxyService {
 }
 
 impl ProxyService {
-    pub fn new(upstream_base_uri: Uri, no_chunked: bool) -> ProxyService {
+    pub fn new(
+        upstream_base_uri: Uri,
+        no_chunked: bool,
+        may_buffer_size: Option<usize>,
+    ) -> ProxyService {
         let mut http_connector = HttpConnector::new();
         // https://github.com/golang/go/blob/go1.14.1/src/net/tcpsock.go#L195
         http_connector.set_nodelay(true);
         // https://github.com/golang/go/blob/go1.14.1/src/net/dial.go#L15-L19
         http_connector.set_keepalive(Some(Duration::from_secs(15)));
-
-        let http_client = Client::builder()
-            //.http1_writev(false)
-            // https://github.com/golang/go/blob/go1.14.1/src/net/http/httputil/reverseproxy.go#L412
-            //.http1_read_buf_exact_size(32 * 1024)
-            //.http1_max_buf_size(1024 * 1024)
-            .build(http_connector);
+        let mut http_client_builder = &mut Client::builder();
+        if let Some(buffer_size) = may_buffer_size {
+            http_client_builder = http_client_builder.http1_max_buf_size(buffer_size);
+        }
+        let http_client = http_client_builder.build(http_connector);
         ProxyService {
             upstream_base_uri,
             upstream_http_client: http_client,

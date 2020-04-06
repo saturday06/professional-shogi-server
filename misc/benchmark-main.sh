@@ -26,9 +26,9 @@ run() (
   executable_pid=$!
   sleep 3
 
-  run_task 1 wrk -d 120 -t $thread -c $connection -H 'Host: example' http://127.0.0.1:$port/$path > /dev/null
+  run_task 1 wrk -d 120 -t $thread -c $connection --timeout 10s -H 'Host: example' http://127.0.0.1:$port/$path > /dev/null
   sleep 1
-  run_task 1 wrk -d 300 -t $thread -c $connection -H 'Host: example' http://127.0.0.1:$port/$path
+  run_task 1 wrk -d 300 -t $thread -c $connection --timeout 10s -H 'Host: example' http://127.0.0.1:$port/$path
 
   pkill -TERM -P $executable_pid
   wait $executable_pid || true
@@ -72,7 +72,7 @@ sleep 3
 for iteration in 1 2; do
   for thread in $(expr $(nproc) / 2); do
     for path in 8k 16k 32k 64k 128k 256k 512k 768k 1m 2m 3m 4m 6m 8m 16m 32m 64m; do
-      for connection in $(expr $(nproc) \* 10); do
+      for connection in $(expr $(nproc) \* 8); do
         for executable in $(find ./driver -name "*.sh" | sort); do
           run $executable $path $connection $thread
         done

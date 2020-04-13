@@ -7,7 +7,7 @@ run_task() (
   shift
 
   if [ $(uname -s) = "Linux" ]; then
-    cpu_list=$(awk 'BEGIN{for (i = 0; i < ARGV[1] / 2; i++) { if (i > 0) printf(","); printf("%d", i + ARGV[1] * ARGV[2] / 2);}}' $(nproc) $group)
+    cpu_list=$(awk 'BEGIN{for (i = 0; i < ARGV[1] / ARGV[3]; i++) { if (i > 0) printf(","); printf("%d", i + ARGV[1] * ARGV[2] / ARGV[3]);}}' $(nproc) $group 4)
     exec taskset --cpu-list $cpu_list "$@"
   else
     exec "$@"
@@ -66,7 +66,7 @@ mkdir -p "$PWD/upstream/www/html"
 nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -s quit || true
 sleep 3
 nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -t
-run_task 1 nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -g 'daemon off;' &
+run_task 2 nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -g 'daemon off;' &
 sleep 3
 
 for iteration in 1 2; do

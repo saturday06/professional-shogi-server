@@ -70,7 +70,7 @@ run_task 2 nginx -p "$PWD/upstream" -c "$PWD/nginx.conf" -g 'daemon off;' &
 sleep 3
 
 for iteration in 1 2; do
-  for thread in $(expr $(nproc) / 2); do
+  for thread in $(expr $(nproc) / 4); do
     for path in 8k 16k 32k 64k 128k 256k 512k 768k 1m 2m 3m 4m 6m 8m 16m 32m 64m; do
       for connection in $(expr $(nproc) \* 4); do
         for executable in $(find ./driver -name "*.sh" | sort); do

@@ -92,6 +92,7 @@ WARNING
     for thread in $(expr $(nproc) / $num_groups); do
       for path in 8k 16k 32k 64k 128k 256k 512k 768k 1m 2m 3m 4m 6m 8m 16m 32m 64m; do
         for connection in $(expr $(nproc) / $num_groups \* 16); do
+          echo -----------
           for executable in $(find ./driver -name "*.sh" | sort); do
             run $num_groups $wrk_group $benchmark_group $executable $path $connection $thread
           done

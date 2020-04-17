@@ -61,8 +61,6 @@ run_all() {
     )
   fi
 
-  cd "$(dirname "$0")"
-
   recommended_ulimit_n=32768
   if [ $(ulimit -n) -lt $recommended_ulimit_n ]; then
     ulimit -n $recommended_ulimit_n
@@ -116,4 +114,12 @@ main() {
   run_all $num_groups $wrk_group $benchmark_group $nginx_group
 }
 
-main
+main_with_logging() {
+  cd "$(dirname "$0")"
+  mkdir -p ../target
+  start_time=$(LC_ALL=C date +%Y%m%d%H%M%S)
+  main "$@" 2>&1 | tee ../target/benchmark-${start_time}.txt
+  cat ../target/benchmark-${start_time}.txt | grep -E 'run [0-9 ]+ \./driver/|Requests/sec:|Trnsfer/sec:|Socket errors: connect|-----------'| tee ../target/summary-${start_time}.txt
+}
+
+main_with_logging
